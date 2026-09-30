@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MissionStatus {
+  DRAFT
+  PLANNING
+  RUNNING
+  WAITING_APPROVAL
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  WAITING_APPROVAL
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Mission {
+  id        String   @id @default(cuid())
+  userId    String
+  goal      String
+  status    MissionStatus @default(DRAFT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  steps     AgentStep[]
+  approvals Approval[]
+  events    ExecutionEvent[]
+  @@index([userId, createdAt])
+}
+
+model AgentStep {
+  id              String @id @default(cuid())
+  missionId       String
+  order           Int
+  objective       String
+  action          String
+  tool            String
+  target          String?
+  status          StepStatus @default(PENDING)
+  reasoningSummary String?
+  expectedOutcome String?
+  actualOutcome   String?
+  confidence      Float?
+  attempts        Int      @default(0)
+  lastError       String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  mission         Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  evidence        Evidence[]
+  approvals       Approval[]
+  events          ExecutionEvent[]
+  @@unique([missionId, order])
+  @@index([missionId, status])
+}
+
+model Evidence {
+  id             String @id @default(cuid())
+  stepId         String
+  type           String
+  url            String?
+  screenshotPath String?
+  extractedData  Json?
+  description    String
+  createdAt      DateTime @default(now())
+  step           AgentStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+}
+
+model Approval {
+  id         String @id @default(cuid())
+  missionId  String
+  stepId     String
+  action     String
+  target     String?
+  dataShared String?
+  reason     String?
+  riskLevel  RiskLevel
+  status     ApprovalStatus @default(PENDING)
+  approvedAt DateTime?
+  rejectedAt DateTime?
+  mission    Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  step       AgentStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  @@index([missionId, status])
+}
+
+model ExecutionEvent {
+  id        String @id @default(cuid())
+  missionId String
+  stepId    String?
+  eventType String
+  message   String
+  metadata  Json?
+  timestamp DateTime @default(now())
+  mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  step      AgentStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  @@index([missionId, timestamp])
+}

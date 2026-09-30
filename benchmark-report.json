@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-09-26T17:13:03.472Z",
+  "harness": "deterministic-agent-policy-scenarios",
+  "note": "These are reproducible harness results, not production metrics.",
+  "scenarios": [
+    {
+      "name": "successful mission",
+      "success": true,
+      "completionTimeMs": 1,
+      "steps": 3,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "PASS",
+      "approvalEvents": 0,
+      "finalOutcome": "Completed with evidence"
+    },
+    {
+      "name": "browser timeout",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 1,
+      "recoverySuccess": true,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    },
+    {
+      "name": "missing selector",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 1,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    },
+    {
+      "name": "authentication wall",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 1,
+      "finalOutcome": "Paused for human authentication"
+    },
+    {
+      "name": "unexpected modal",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 1,
+      "recoverySuccess": true,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    },
+    {
+      "name": "invalid extracted data",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    },
+    {
+      "name": "LLM malformed output",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    },
+    {
+      "name": "tool failure",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 1,
+      "recoverySuccess": true,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    },
+    {
+      "name": "recovery attempt",
+      "success": true,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 1,
+      "recoverySuccess": true,
+      "verificationResult": "PASS",
+      "approvalEvents": 0,
+      "finalOutcome": "Completed with evidence"
+    },
+    {
+      "name": "human approval",
+      "success": true,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "PASS",
+      "approvalEvents": 1,
+      "finalOutcome": "Completed with evidence"
+    },
+    {
+      "name": "human rejection",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 1,
+      "finalOutcome": "Stopped before consequential action"
+    },
+    {
+      "name": "mission cancellation",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Cancelled by user"
+    },
+    {
+      "name": "server restart/resume",
+      "success": true,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 1,
+      "recoverySuccess": true,
+      "verificationResult": "PASS",
+      "approvalEvents": 0,
+      "finalOutcome": "Completed with evidence"
+    },
+    {
+      "name": "duplicate execution",
+      "success": true,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "PASS",
+      "approvalEvents": 0,
+      "finalOutcome": "Completed with evidence"
+    },
+    {
+      "name": "final verification failure",
+      "success": false,
+      "completionTimeMs": 1,
+      "steps": 1,
+      "retries": 0,
+      "recoverySuccess": false,
+      "verificationResult": "FAIL",
+      "approvalEvents": 0,
+      "finalOutcome": "Paused or failed without false success"
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "passed": 5,
+    "failed": 10
+  }
+}

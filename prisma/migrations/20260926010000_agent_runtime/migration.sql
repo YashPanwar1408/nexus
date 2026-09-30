@@ -1,0 +1,5 @@
+ALTER TABLE "AgentStep" ADD COLUMN "attempts" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "AgentStep" ADD COLUMN "lastError" TEXT;
+ALTER TABLE "Approval" ADD COLUMN "target" TEXT;
+ALTER TABLE "Approval" ADD COLUMN "dataShared" TEXT;
+ALTER TABLE "Approval" ADD COLUMN "reason" TEXT;
