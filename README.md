@@ -105,7 +105,7 @@ lib/
   agent/risk.ts                    Risk classification and approval policy
   browser/tool.ts                  Playwright allowlisted browser tool
   events/bus.ts                    Durable event creation and subscriptions
-  llm/provider.ts                  Grok and Gemini provider abstraction
+  llm/provider.ts                  Groq and Gemini provider abstraction
   recovery/policy.ts               Retry and timeout policy
   verification/verify.ts           Expected vs observed verification
   testing/scenarios.ts             Deterministic QA scenario harness
@@ -128,7 +128,7 @@ tests/                             Unit and deterministic agent scenario tests
 - PostgreSQL
 - Prisma ORM
 - Playwright
-- xAI Grok through the xAI OpenAI-compatible chat endpoint
+- Groq Cloud through the Groq OpenAI-compatible chat endpoint
 - Optional Gemini provider
 - Zod structured validation
 - Vitest
@@ -142,7 +142,7 @@ Install these before setup:
 - npm
 - PostgreSQL 14 or newer, local or hosted
 - Chromium for Playwright
-- An xAI API key for real planning, or Gemini as an alternative
+- A Groq API key for real planning, or Gemini as an alternative
 
 The app can build and run its deterministic tests without an LLM key. Real planning requires a configured provider.
 
@@ -186,13 +186,13 @@ Example provider configuration:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/nexus?schema=public"
-LLM_PROVIDER="grok"
-XAI_API_KEY="your_xai_key"
-XAI_BASE_URL="https://api.x.ai/v1"
-XAI_MODEL="grok-3-mini"
+LLM_PROVIDER="groq"
+GROQ_API_KEY="your_groq_key"
+GROQ_BASE_URL="https://api.groq.com/openai/v1"
+GROQ_MODEL="llama-3.3-70b-versatile"
 ```
 
-The Grok model is configurable. If `grok-3-mini` is unavailable or rate-limited for the account, set `XAI_MODEL` to a model currently available in the xAI account. Do not hardcode a key in source code.
+The Groq model is configurable. If `llama-3.3-70b-versatile` is unavailable or rate-limited for the account, set `GROQ_MODEL` to a model currently available in Groq Cloud. Do not hardcode a key in source code.
 
 ### 4. Prepare the database
 
@@ -251,7 +251,7 @@ The production server uses the same `.env` configuration and requires the databa
 2. Enter a goal or use the internship example.
 3. Select **Start mission**.
 4. On the mission page, select **Start execution**.
-5. NEXUS requests a structured plan from Grok.
+5. NEXUS requests a structured plan from Groq Cloud.
 6. NEXUS persists the plan as `AgentStep` records.
 7. Browser steps execute through the Playwright allowlist.
 8. Evidence is captured after each important action.
@@ -318,10 +318,10 @@ All variables are listed in `.env.example`.
 | Variable | Required | Description |
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `LLM_PROVIDER` | Yes | `grok` or `gemini` |
-| `XAI_API_KEY` | For Grok | xAI API key; keep only in `.env` or a secret manager |
-| `XAI_BASE_URL` | No | Defaults to `https://api.x.ai/v1` |
-| `XAI_MODEL` | No | Defaults to `grok-3-mini` |
+| `LLM_PROVIDER` | Yes | `groq` or `gemini` |
+| `GROQ_API_KEY` | For Groq | Groq Cloud API key; keep only in `.env` or a secret manager |
+| `GROQ_BASE_URL` | No | Defaults to `https://api.groq.com/openai/v1` |
+| `GROQ_MODEL` | No | Defaults to `llama-3.3-70b-versatile` |
 | `GEMINI_API_KEY` | For Gemini | Optional Gemini API key |
 | `GEMINI_MODEL` | No | Defaults to `gemini-2.5-flash` |
 | `APP_URL` | No | Defaults to `http://localhost:3000` |
@@ -536,9 +536,9 @@ Use the full path:
 
 Copy `.env.example` to `.env` and set a valid PostgreSQL URL. Restart the dev server after changing `.env`.
 
-### Grok returns a rate-limit or model error
+### Groq returns an authentication, rate-limit, or model error
 
-Check the xAI account's available models and set `XAI_MODEL` accordingly. The default is `grok-3-mini`. Also verify the key has available quota. NEXUS reports provider errors instead of claiming a plan was created.
+Check the Groq Cloud API key and available models, then set `GROQ_MODEL` accordingly. The default is `llama-3.3-70b-versatile`. Also verify the key has available quota. NEXUS reports provider errors instead of claiming a plan was created.
 
 ### Playwright cannot launch
 

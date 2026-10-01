@@ -6,18 +6,18 @@ const planSchema = JSON.stringify({ steps: [{ objective: "string", action: "stri
 export function createLlmProvider(): LlmProvider {
   const env = getEnv();
   if (env.LLM_PROVIDER === "gemini") return new GeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL);
-  return new GrokProvider(env.XAI_API_KEY, env.XAI_BASE_URL, env.XAI_MODEL);
+  return new GroqProvider(env.GROQ_API_KEY, env.GROQ_BASE_URL, env.GROQ_MODEL);
 }
 
-class GrokProvider implements LlmProvider {
+class GroqProvider implements LlmProvider {
   constructor(private readonly apiKey: string | undefined, private readonly baseUrl: string, private readonly model: string) {}
   async plan(goal: string): Promise<AgentPlan> {
-    if (!this.apiKey) throw new Error("Configuration error: XAI_API_KEY is required for the grok provider");
+    if (!this.apiKey) throw new Error("Configuration error: GROQ_API_KEY is required for the groq provider");
     const response = await fetch(`${this.baseUrl}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.apiKey}` }, body: JSON.stringify({ model: this.model, temperature: 0, max_tokens: 1600, messages: [{ role: "system", content: `Return only valid JSON. Do not use markdown fences or commentary. Match this schema exactly: ${planSchema}` }, { role: "user", content: goal }] }) });
     if (!response.ok) {
-      if (response.status === 429) throw new Error(`Grok rate limit reached for model ${this.model}; set XAI_MODEL to an available model or retry later`);
+      if (response.status === 429) throw new Error(`Groq rate limit reached for model ${this.model}; set GROQ_MODEL to an available model or retry later`);
       const details = await response.text();
-      throw new Error(`Grok request failed with status ${response.status}: ${summarizeProviderError(details)}`);
+      throw new Error(`Groq request failed with status ${response.status}: ${summarizeProviderError(details)}`);
     }
     const body = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     return parsePlan(body.choices?.[0]?.message?.content);

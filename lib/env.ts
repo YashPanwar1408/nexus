@@ -7,10 +7,10 @@ const envBoolean = z.preprocess((value) => {
 
 const schema = z.object({
   DATABASE_URL: z.string().min(1),
-  LLM_PROVIDER: z.enum(["grok", "gemini"]).default("grok"),
-  XAI_API_KEY: z.string().optional(),
-  XAI_BASE_URL: z.string().url().default("https://api.x.ai/v1"),
-  XAI_MODEL: z.string().default("grok-3-mini"),
+  LLM_PROVIDER: z.enum(["groq", "gemini"]).default("groq"),
+  GROQ_API_KEY: z.string().optional(),
+  GROQ_BASE_URL: z.string().url().default("https://api.groq.com/openai/v1"),
+  GROQ_MODEL: z.string().default("llama-3.3-70b-versatile"),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
   APP_URL: z.string().url().default("http://localhost:3000"),
