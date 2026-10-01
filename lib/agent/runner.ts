@@ -40,6 +40,9 @@ export async function runMission(missionId: string) {
       if (approval) { await prisma.agentStep.update({ where: { id: step.id }, data: { status: "WAITING_APPROVAL" } }); await prisma.mission.update({ where: { id: missionId }, data: { status: "WAITING_APPROVAL" } }); await emitEvent({ missionId, stepId: step.id, eventType: "APPROVAL_REQUIRED", message: `Approval required for ${approval.action}`, metadata: { target: step.target, riskLevel: approval.riskLevel } }); return { status: "WAITING_APPROVAL" as const }; }
       browser ??= new BrowserTool();
       await executeStep(missionId, step, browser, env.AGENT_STEP_TIMEOUT_MS);
+      const updatedStep = await prisma.agentStep.findUniqueOrThrow({ where: { id: step.id }, select: { status: true } });
+      if (updatedStep.status === "FAILED") { await failMission(missionId, `Step failed: ${step.objective}`); return { status: "FAILED" as const }; }
+      if (updatedStep.status === "WAITING_APPROVAL") return { status: "WAITING_APPROVAL" as const };
     }
   } finally { await browser?.close().catch(() => undefined); activeMissions.delete(missionId); }
 }

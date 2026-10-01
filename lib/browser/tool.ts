@@ -37,7 +37,11 @@ export class BrowserTool {
 
   async search(query: string): Promise<ToolResult> {
     const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
-    return this.navigate(url);
+    const navigation = await this.navigate(url);
+    if (!navigation.success) return navigation;
+    const text = await this.getPageText();
+    if (!text.trim()) return { success: false, output: "Search page loaded without observable results" };
+    return { success: true, output: `Search results loaded for ${query}\n${text.slice(0, 12_000)}` };
   }
 
   async click(selector: string): Promise<ToolResult> {
@@ -83,7 +87,7 @@ export class BrowserTool {
 
   async getCurrentUrl() { return (await this.page()).url(); }
 
-  async getPageText() { return (await this.page()).locator("body").innerText().catch(() => ""); }
+  async getPageText() { return (await this.page()).locator("body").innerText({ timeout: 10_000 }).catch(() => ""); }
 
   async getLinks(selector = "a") {
     const page = await this.page();

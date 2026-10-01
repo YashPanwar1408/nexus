@@ -7,13 +7,14 @@ export async function searchAndPersistJobs(input: { profileId: string; query: Jo
   const search = await prisma.jobSearch.create({ data: { profileId: input.profileId, missionId: input.missionId, role: input.query.role, location: input.query.location, postedWithinHours: input.query.postedWithinHours, remoteOnly: input.query.remoteOnly, status: "SEARCHING" } });
   const sourceStatuses: Record<string, string> = {};
   const jobs: Array<{ id: string; score: number }> = [];
-  for (const source of createJobSources()) {
-    const result = await source.searchJobs(input.query);
+  const profile = await profileInput(input.profileId);
+  const results = await Promise.all(createJobSources().map((source) => source.searchJobs(input.query)));
+  for (const result of results) {
     sourceStatuses[result.source] = result.status;
     for (const job of result.jobs) {
       if (!job.sourceUrl || !job.applicationUrl) continue;
       const saved = await prisma.job.upsert({ where: { source_sourceJobId: { source: job.source, sourceJobId: job.sourceJobId } }, update: { searchId: search.id, title: job.title, company: job.company, location: job.location, remoteStatus: job.remoteStatus, employmentType: job.employmentType, description: job.description, postedAt: job.postedAt, applicationUrl: job.applicationUrl, sourceUrl: job.sourceUrl, skills: job.skills, experience: job.experience, salary: job.salary, logoUrl: job.logoUrl, extractedAt: job.extractedAt }, create: { ...job, searchId: search.id } });
-      const match = analyzeRelevance(await profileInput(input.profileId), job);
+      const match = analyzeRelevance(profile, job);
       await prisma.jobMatch.upsert({ where: { searchId_jobId: { searchId: search.id, jobId: saved.id } }, update: match, create: { searchId: search.id, jobId: saved.id, ...match } });
       jobs.push({ id: saved.id, score: match.score });
     }
