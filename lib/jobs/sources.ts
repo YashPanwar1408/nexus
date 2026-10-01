@@ -49,7 +49,7 @@ export class LeverJobSource implements JobSource {
   readonly name = "Lever" as const;
   constructor(private readonly sites: string[]) {}
   async searchJobs(query: JobSearchQuery): Promise<JobSourceResult> {
-    if (!this.sites.length) return { source: this.name, status: "FAILED", jobs: [], message: "No Lever sites are configured." };
+    if (!this.sites.length) return { source: this.name, status: "NO_RESULTS", jobs: [], message: "No Lever sites are configured." };
     const jobs: Job[] = [];
     try { const responses = await Promise.all(this.sites.map(async (site) => { try { const body = await fetchJson<LeverResponse>(`https://api.lever.co/v0/postings/${encodeURIComponent(site)}?mode=json`); return (body ?? []).map((item) => leverJob(item, site)); } catch { return []; } })); for (const siteJobs of responses) for (const job of siteJobs) if (matchesQuery(job, query)) jobs.push(job); return { source: this.name, status: jobs.length ? "RESULTS_FOUND" : "NO_RESULTS", jobs, message: jobs.length ? `Found ${jobs.length} Lever listing(s).` : "No matching Lever listings were found." }; } catch (error) { return { source: this.name, status: "FAILED", jobs: [], message: error instanceof Error ? error.message : "Lever search failed" }; }
   }

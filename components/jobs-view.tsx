@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 type Profile = { id: string; confirmedAt: string | null };
 type Job = { id: string; source: string; title: string; company: string; location: string; remoteStatus: string | null; employmentType: string | null; description: string; postedAt: string | null; applicationUrl: string; sourceUrl: string; skills: string[]; matches: Array<{ score: number; matchedSkills: string[]; missingSkills: string[]; reasons: string[] }>; application: { id: string; status: string } | null };
-type SearchResponse = { searchId: string; sourceStatuses: Record<string, string>; jobCount: number };
+type SearchResponse = { profileId: string; searchId: string; sourceStatuses: Record<string, string>; jobCount: number };
 type PreparedField = { fieldName: string; value: string | null; status: string; confidence: number };
 
 type Preview = { applicationId: string; job: Job; fields: PreparedField[] };
@@ -28,16 +28,13 @@ export function JobsView() {
   }, []);
 
   async function search() {
-    if (!profile?.id) {
-      setMessage("Create and confirm your profile before searching.");
-      return;
-    }
     setSearching(true);
     setMessage("");
-    const response = await fetch("/api/job-search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId: profile.id, role, location, postedWithinHours: Number(hours), remoteOnly }) });
+    const response = await fetch("/api/job-search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId: profile?.id, role, location, postedWithinHours: Number(hours), remoteOnly }) });
     const body = await response.json() as SearchResponse & { error?: string };
     if (!response.ok) setMessage(body.error ?? "Job search failed");
     else {
+      setProfile((current) => current ?? { id: body.profileId, confirmedAt: null });
       setStatuses(body.sourceStatuses);
       const jobsResponse = await fetch(`/api/jobs?searchId=${body.searchId}`);
       setJobs(await jobsResponse.json());
@@ -77,7 +74,7 @@ export function JobsView() {
     <header className="topbar"><a className="brand" href="/">NEXUS <span>MISSION CONTROL</span></a><nav><a className="nav-button" href="/profile">Profile</a><a className="nav-button" href="/applications">Applications</a><a className="nav-button" href="/">New mission</a></nav></header>
     <section className="page-heading"><p className="eyebrow cyan">Job mission / live sources</p><h1>Find work that fits.</h1><p className="muted heading-copy">NEXUS searches configured public sources, filters by freshness, and calculates a deterministic profile match. Unavailable sources are reported, never replaced with invented listings. Personal LinkedIn or Indeed browser logins are not shared with the deployed server.</p></section>
     <section className="job-search-panel"><div><label className="field-label">Role<input value={role} onChange={(event) => setRole(event.target.value)} /></label><label className="field-label">Location<input value={location} onChange={(event) => setLocation(event.target.value)} /></label></div><div><label className="field-label">Posted within<select value={hours} onChange={(event) => setHours(event.target.value)}><option value="24">Last 24 hours</option><option value="48">Last 48 hours</option><option value="168">Last 7 days</option></select></label><label className="check-label"><input type="checkbox" checked={remoteOnly} onChange={(event) => setRemoteOnly(event.target.checked)} /> Remote only</label></div><button className="primary-button" onClick={search} disabled={searching}>{searching ? "Searching sources..." : "Search with NEXUS"}<span>→</span></button></section>
-    {!profile?.confirmedAt && <div className="notice-panel">Confirm your profile before searching or preparing applications. <a href="/profile">Open profile →</a></div>}
+    {!profile?.confirmedAt && <div className="notice-panel">Search is available now. Confirm your profile for personalized matching and application preparation. <a href="/profile">Open profile →</a></div>}
     {Object.keys(statuses).length > 0 && <section className="source-statuses"><p className="eyebrow">Source status</p>{Object.entries(statuses).map(([source, status]) => <span className={`source-status ${status.toLowerCase()}`} key={source}><strong>{source}</strong> {status.replaceAll("_", " ")}</span>)}</section>}
     {statuses.Demo && <div className="notice-panel">DEMO DATA: rotating fixture opportunities with real company career-page links. These are not claimed as live openings.</div>}
     {message && <p className="error-banner">{message}</p>}
