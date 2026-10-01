@@ -13,14 +13,23 @@ class GrokProvider implements LlmProvider {
   constructor(private readonly apiKey: string | undefined, private readonly baseUrl: string, private readonly model: string) {}
   async plan(goal: string): Promise<AgentPlan> {
     if (!this.apiKey) throw new Error("Configuration error: XAI_API_KEY is required for the grok provider");
-    const response = await fetch(`${this.baseUrl}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.apiKey}` }, body: JSON.stringify({ model: this.model, temperature: 0, max_tokens: 1200, response_format: { type: "json_object" }, messages: [{ role: "system", content: `Return only JSON matching this schema: ${planSchema}` }, { role: "user", content: goal }] }) });
+    const response = await fetch(`${this.baseUrl}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.apiKey}` }, body: JSON.stringify({ model: this.model, temperature: 0, max_tokens: 1600, messages: [{ role: "system", content: `Return only valid JSON. Do not use markdown fences or commentary. Match this schema exactly: ${planSchema}` }, { role: "user", content: goal }] }) });
     if (!response.ok) {
       if (response.status === 429) throw new Error(`Grok rate limit reached for model ${this.model}; set XAI_MODEL to an available model or retry later`);
-      throw new Error(`Grok request failed with status ${response.status}`);
+      const details = await response.text();
+      throw new Error(`Grok request failed with status ${response.status}: ${summarizeProviderError(details)}`);
     }
     const body = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     return parsePlan(body.choices?.[0]?.message?.content);
   }
+}
+
+function summarizeProviderError(body: string) {
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: string } | string; message?: string };
+    const error = typeof parsed.error === "string" ? parsed.error : parsed.error?.message ?? parsed.message;
+    return (error ?? body).slice(0, 500);
+  } catch { return body.slice(0, 500); }
 }
 
 class GeminiProvider implements LlmProvider {
