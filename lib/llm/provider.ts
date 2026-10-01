@@ -1,7 +1,7 @@
 import { getEnv } from "@/lib/env";
 import type { AgentPlan, LlmProvider } from "@/lib/llm/types";
 
-const planSchema = JSON.stringify({ steps: [{ objective: "string", action: "string", tool: "browser|api|mcp|human", target: "string", expectedOutcome: "string", requiresApproval: "boolean", riskLevel: "LOW|MEDIUM|HIGH|CRITICAL" }] });
+const planSchema = JSON.stringify({ steps: [{ objective: "string", action: "navigate|search|click|type|extract|read|observe|screenshot|analyze|prepare|submit", tool: "browser|api|mcp|human|llm", target: "string", expectedOutcome: "string", requiresApproval: "boolean", riskLevel: "LOW|MEDIUM|HIGH|CRITICAL" }] });
 
 export function createLlmProvider(): LlmProvider {
   const env = getEnv();
