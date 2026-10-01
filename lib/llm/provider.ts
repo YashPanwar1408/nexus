@@ -17,7 +17,9 @@ class GroqProvider implements LlmProvider {
     if (!response.ok) {
       if (response.status === 429) throw new Error(`Groq rate limit reached for model ${this.model}; set GROQ_MODEL to an available model or retry later`);
       const details = await response.text();
-      throw new Error(`Groq request failed with status ${response.status}: ${summarizeProviderError(details)}`);
+      const explanation = summarizeProviderError(details);
+      if (response.status === 404) throw new Error(`Groq model "${this.model}" is unavailable for this account. Set GROQ_MODEL in Vercel to a model listed in Groq Console, for example openai/gpt-oss-120b. Provider response: ${explanation}`);
+      throw new Error(`Groq request failed with status ${response.status}: ${explanation}`);
     }
     const body = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     return parsePlan(body.choices?.[0]?.message?.content);

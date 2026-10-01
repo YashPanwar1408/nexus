@@ -189,10 +189,10 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/nexus?schema=public"
 LLM_PROVIDER="groq"
 GROQ_API_KEY="your_groq_key"
 GROQ_BASE_URL="https://api.groq.com/openai/v1"
-GROQ_MODEL="llama-3.3-70b-versatile"
+GROQ_MODEL="openai/gpt-oss-120b"
 ```
 
-The Groq model is configurable. If `llama-3.3-70b-versatile` is unavailable or rate-limited for the account, set `GROQ_MODEL` to a model currently available in Groq Cloud. Do not hardcode a key in source code.
+The Groq model is configurable. If `openai/gpt-oss-120b` is unavailable or rate-limited for the account, set `GROQ_MODEL` to a model currently available in Groq Cloud. Do not hardcode a key in source code.
 
 ### 4. Prepare the database
 
@@ -321,7 +321,7 @@ All variables are listed in `.env.example`.
 | `LLM_PROVIDER` | Yes | `groq` or `gemini` |
 | `GROQ_API_KEY` | For Groq | Groq Cloud API key; keep only in `.env` or a secret manager |
 | `GROQ_BASE_URL` | No | Defaults to `https://api.groq.com/openai/v1` |
-| `GROQ_MODEL` | No | Defaults to `llama-3.3-70b-versatile` |
+| `GROQ_MODEL` | No | Defaults to `openai/gpt-oss-120b` |
 | `GEMINI_API_KEY` | For Gemini | Optional Gemini API key |
 | `GEMINI_MODEL` | No | Defaults to `gemini-2.5-flash` |
 | `APP_URL` | No | Defaults to `http://localhost:3000` |
@@ -538,7 +538,7 @@ Copy `.env.example` to `.env` and set a valid PostgreSQL URL. Restart the dev se
 
 ### Groq returns an authentication, rate-limit, or model error
 
-Check the Groq Cloud API key and available models, then set `GROQ_MODEL` accordingly. The default is `llama-3.3-70b-versatile`. Also verify the key has available quota. NEXUS reports provider errors instead of claiming a plan was created.
+Check the Groq Cloud API key and available models, then set `GROQ_MODEL` accordingly. The default is `openai/gpt-oss-120b`. Also verify the key has available quota. NEXUS reports provider errors instead of claiming a plan was created.
 
 ### Playwright cannot launch
 
