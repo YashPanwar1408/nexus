@@ -50,6 +50,13 @@ async function executeStep(missionId: string, step: { id: string; objective: str
   await prisma.agentStep.update({ where: { id: step.id }, data: { status: "RUNNING", attempts: { increment: 1 }, startedAt: new Date() } });
   await emitEvent({ missionId, stepId: step.id, eventType: "STEP_STARTED", message: step.objective });
   await emitEvent({ missionId, stepId: step.id, eventType: "TOOL_CALLED", message: `${step.tool}.${step.action}` });
+  if (step.tool === "browser" && !["navigate", "search"].includes(step.action)) {
+    const currentUrl = await browser.getCurrentUrl().catch(() => "about:blank");
+    if (currentUrl === "about:blank") {
+      const previousEvidence = await prisma.evidence.findFirst({ where: { step: { missionId }, url: { not: null } }, orderBy: { createdAt: "desc" }, select: { url: true } });
+      if (previousEvidence?.url) await browser.navigate(previousEvidence.url);
+    }
+  }
   const result = step.tool === "browser" ? await withTimeout(browser.execute(step.action, step.target ?? undefined, missionId, step.id), timeoutMs, "Tool execution timed out").catch((error) => ({ success: false, output: error instanceof Error ? error.message : "Tool execution failed" })) : { success: false, output: `No executor registered for tool: ${step.tool}` };
   const observation = await withTimeout(browser.observe(missionId, step.id), timeoutMs, "Observation timed out").catch((error) => ({ url: "", title: "", text: error instanceof Error ? error.message : "Observation failed", screenshotPath: "" }));
   await prisma.evidence.create({ data: { stepId: step.id, type: "browser_observation", url: observation.url, screenshotPath: observation.screenshotPath, extractedData: { title: observation.title, actionSucceeded: result.success }, description: result.output } });

@@ -6,15 +6,18 @@ const planSchema = JSON.stringify({ steps: [{ objective: "string", action: "stri
 export function createLlmProvider(): LlmProvider {
   const env = getEnv();
   if (env.LLM_PROVIDER === "gemini") return new GeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL);
-  return new OpenAiCompatibleProvider(env.LLM_API_KEY, env.LLM_BASE_URL, env.LLM_MODEL);
+  return new GrokProvider(env.XAI_API_KEY, env.XAI_BASE_URL, env.XAI_MODEL);
 }
 
-class OpenAiCompatibleProvider implements LlmProvider {
+class GrokProvider implements LlmProvider {
   constructor(private readonly apiKey: string | undefined, private readonly baseUrl: string, private readonly model: string) {}
   async plan(goal: string): Promise<AgentPlan> {
-    if (!this.apiKey) throw new Error("Configuration error: LLM_API_KEY is required for the openai provider");
-    const response = await fetch(`${this.baseUrl}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.apiKey}` }, body: JSON.stringify({ model: this.model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "system", content: `Return only JSON matching this schema: ${planSchema}` }, { role: "user", content: goal }] }) });
-    if (!response.ok) throw new Error(`LLM request failed with status ${response.status}`);
+    if (!this.apiKey) throw new Error("Configuration error: XAI_API_KEY is required for the grok provider");
+    const response = await fetch(`${this.baseUrl}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.apiKey}` }, body: JSON.stringify({ model: this.model, temperature: 0, max_tokens: 1200, response_format: { type: "json_object" }, messages: [{ role: "system", content: `Return only JSON matching this schema: ${planSchema}` }, { role: "user", content: goal }] }) });
+    if (!response.ok) {
+      if (response.status === 429) throw new Error(`Grok rate limit reached for model ${this.model}; set XAI_MODEL to an available model or retry later`);
+      throw new Error(`Grok request failed with status ${response.status}`);
+    }
     const body = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     return parsePlan(body.choices?.[0]?.message?.content);
   }

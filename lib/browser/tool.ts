@@ -13,6 +13,9 @@ export type BrowserObservation = {
   screenshotPath: string;
 };
 
+export type BrowserLink = { text: string; href: string };
+export type BrowserFormField = { selector: string; label: string; type: string; required: boolean };
+
 export class BrowserTool {
   private readonly browserPromise = launchBrowser();
   private pagePromise = this.browserPromise.then(async (browser) => (await browser.newContext()).newPage());
@@ -81,6 +84,21 @@ export class BrowserTool {
   async getCurrentUrl() { return (await this.page()).url(); }
 
   async getPageText() { return (await this.page()).locator("body").innerText().catch(() => ""); }
+
+  async getLinks(selector = "a") {
+    const page = await this.page();
+    return page.locator(selector).evaluateAll((elements) => elements.map((element) => ({ text: (element.textContent ?? "").trim(), href: (element as HTMLAnchorElement).href })).filter((link): link is BrowserLink => Boolean(link.href)));
+  }
+
+  async inspectFormFields() {
+    const page = await this.page();
+    return page.locator("input, textarea, select").evaluateAll((elements) => elements.map((element, index) => { const input = element as HTMLInputElement; const id = input.id; const label = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`)?.textContent : undefined; return { selector: id ? `#${CSS.escape(id)}` : `${element.tagName.toLowerCase()}:nth-of-type(${index + 1})`, label: `${label ?? input.getAttribute("aria-label") ?? input.getAttribute("placeholder") ?? input.getAttribute("name") ?? ""}`.trim(), type: input.type || element.tagName.toLowerCase(), required: input.required }; }));
+  }
+
+  async fillField(selector: string, value: string) {
+    const page = await this.page();
+    try { await page.locator(selector).first().fill(value, { timeout: 10_000 }); return { success: true, output: `Filled ${selector}` }; } catch (error) { return { success: false, output: this.failureMessage(error, `Could not fill ${selector}`) }; }
+  }
 
   async observe(missionId: string, stepId: string): Promise<BrowserObservation> {
     const page = await this.page();

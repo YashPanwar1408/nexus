@@ -50,6 +50,7 @@ model Mission {
   steps     AgentStep[]
   approvals Approval[]
   events    ExecutionEvent[]
+  jobSearches JobSearch[]
   @@index([userId, createdAt])
 }
 
@@ -118,4 +119,156 @@ model ExecutionEvent {
   mission   Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
   step      AgentStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
   @@index([missionId, timestamp])
+}
+
+model UserProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  name              String
+  email             String
+  phone             String?
+  college           String?
+  degree            String?
+  graduationYear    Int?
+  skills            Json
+  experience        Json
+  projects          Json
+  portfolio         String?
+  github            String?
+  linkedin          String?
+  location          String?
+  preferredRoles    Json
+  preferredLocations Json
+  confirmedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  resumes           Resume[]
+  searches          JobSearch[]
+  applications      Application[]
+}
+
+model Resume {
+  id           String      @id @default(cuid())
+  profileId    String
+  fileName     String
+  storagePath  String
+  extractedText String?
+  extractedData Json?
+  confirmedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  profile      UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  @@index([profileId, createdAt])
+}
+
+model JobSearch {
+  id             String   @id @default(cuid())
+  profileId      String
+  missionId      String?
+  role           String
+  location       String
+  postedWithinHours Int
+  remoteOnly     Boolean  @default(false)
+  status         String
+  sourceStatuses Json?
+  createdAt      DateTime @default(now())
+  completedAt    DateTime?
+  profile        UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  mission        Mission? @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  jobs           Job[]
+  matches        JobMatch[]
+  @@index([profileId, createdAt])
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  searchId       String
+  source         String
+  sourceJobId    String
+  title          String
+  company        String
+  location       String
+  remoteStatus   String?
+  employmentType String?
+  description    String
+  postedAt       DateTime?
+  applicationUrl String
+  sourceUrl      String
+  skills         Json
+  experience     String?
+  salary         String?
+  logoUrl        String?
+  extractedAt    DateTime @default(now())
+  search         JobSearch @relation(fields: [searchId], references: [id], onDelete: Cascade)
+  matches        JobMatch[]
+  shortlist      Shortlist?
+  application    Application?
+  @@unique([source, sourceJobId])
+  @@index([searchId, postedAt])
+}
+
+model JobMatch {
+  id             String   @id @default(cuid())
+  searchId       String
+  jobId          String
+  score          Int
+  matchedSkills  Json
+  missingSkills  Json
+  experienceMatch Boolean
+  educationMatch Boolean
+  locationMatch  Boolean
+  reasons        Json
+  createdAt      DateTime @default(now())
+  search         JobSearch @relation(fields: [searchId], references: [id], onDelete: Cascade)
+  job            Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  @@unique([searchId, jobId])
+  @@index([searchId, score])
+}
+
+model Shortlist {
+  id        String   @id @default(cuid())
+  jobId     String   @unique
+  status    String   @default("SHORTLISTED")
+  createdAt DateTime @default(now())
+  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model Application {
+  id             String   @id @default(cuid())
+  profileId      String
+  jobId          String   @unique
+  status         String
+  applicationUrl String
+  confirmationId String?
+  submittedAt    DateTime?
+  verifiedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  profile        UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  job            Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fields         ApplicationField[]
+  events         ApplicationEvent[]
+  @@index([profileId, status])
+}
+
+model ApplicationField {
+  id            String   @id @default(cuid())
+  applicationId String
+  fieldName     String
+  profilePath   String?
+  value         String?
+  confidence    Float
+  status        String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@index([applicationId, status])
+}
+
+model ApplicationEvent {
+  id            String   @id @default(cuid())
+  applicationId String
+  eventType     String
+  message       String
+  evidence      Json?
+  createdAt     DateTime @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@index([applicationId, createdAt])
 }
